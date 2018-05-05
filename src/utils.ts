@@ -1,16 +1,16 @@
-import { Position, TextDocument } from "vscode";
-import * as path from 'path';
-import * as fs from 'fs';
+import * as fs from "fs";
 import * as _ from "lodash";
+import * as path from "path";
+import { Position, TextDocument } from "vscode";
 
 export function getCurrentLine(document: TextDocument, position: Position) {
   return document.getText(document.lineAt(position).range);
 }
 
 export function genImportRegExp(key: string) {
-  const file = '(.+\\.\\S{1,2}ss)';
-  const fromOrRequire = '(?:from\\s+|=\\s+require(?:<any>)?\\()';
-  const requireEndOptional = '\\)?';
+  const file = "(.+\\.\\S{1,2}ss)";
+  const fromOrRequire = "(?:from\\s+|=\\s+require(?:<any>)?\\()";
+  const requireEndOptional = "\\)?";
   const pattern = `${key}\\s+${fromOrRequire}["']${file}["']${requireEndOptional}`;
   return new RegExp(pattern);
 }
@@ -21,28 +21,28 @@ export function findImportPath(text: string, key: string, parentPath: string) {
   if (!!results && results.length > 0) {
     return path.resolve(parentPath, results[1]);
   } else {
-    return '';
+    return "";
   }
 }
 
 export enum SuggestionType {
   Class,
-  Method
+  Method,
 }
 
 type Suggestion = {
-  type: SuggestionType,
-  name: string,
-  parent: string,
-  searchText: string
+  type: SuggestionType;
+  name: string;
+  parent: string;
+  searchText: string;
 };
 
-export function getSuggestions(filePath: string, keyword: string) : Array<Suggestion> {
+export function getSuggestions(filePath: string, keyword: string): Array<Suggestion> {
   if (!keyword) {
-    keyword = ':scope';
+    keyword = ":scope";
   }
 
-  const content = fs.readFileSync(filePath, { encoding: 'utf8' });
+  const content = fs.readFileSync(filePath, { encoding: "utf8" });
   const lines = content.match(/.*[,{]/g);
   if (lines === null) {
     return [];
@@ -51,7 +51,7 @@ export function getSuggestions(filePath: string, keyword: string) : Array<Sugges
   const methodRegex = /[.|:]\w+\[state\|[A-Za-z]\w+/g;
   const classNameRegex = /\.[_A-Za-z0-9\-]+/g;
 
-  const selector = lines.join(' ');
+  const selector = lines.join(" ");
   const classNames = selector.match(classNameRegex);
   const methods = selector.match(methodRegex);
 
@@ -60,12 +60,12 @@ export function getSuggestions(filePath: string, keyword: string) : Array<Sugges
   if (classNames !== null) {
     const uniqueClassNames = _.uniq(classNames).map((item: string) => {
       const subclassName = item.slice(1);
-      const parent = ':scope';
+      const parent = ":scope";
       return {
         type: SuggestionType.Class,
         name: subclassName,
         parent: parent,
-        searchText: `${parent}${subclassName}`
+        searchText: `${parent}${subclassName}`,
       };
     });
 
@@ -74,12 +74,12 @@ export function getSuggestions(filePath: string, keyword: string) : Array<Sugges
 
   if (methods !== null) {
     const uniqueMethodNames = _.uniq(methods).map((item: string) => {
-      const [parent, methodName] = item.split('[state|');
+      const [parent, methodName] = item.split("[state|");
       return {
         type: SuggestionType.Method,
         name: methodName,
         parent: parent,
-        searchText: `${parent}[state|${methodName}`
+        searchText: `${parent}[state|${methodName}`,
       };
     });
 
