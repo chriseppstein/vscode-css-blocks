@@ -8,7 +8,7 @@ import { CSSBlocksCompletionProvider as CSSBlockProvider } from "./provider";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext) {
   const mode = [
     { language: "typescriptreact", scheme: "file" },
     { language: "javascriptreact", scheme: "file" },
@@ -28,8 +28,6 @@ function activate(context: vscode.ExtensionContext) {
     ),
   );
 }
-exports.activate = activate;
 
 // this method is called when your extension is deactivated
-function deactivate() {}
-exports.deactivate = deactivate;
+export function deactivate() {}

@@ -1,5 +1,4 @@
-import * as fs from "fs";
-import * as _ from "lodash";
+import { BlockClass, BlockFactory, isBlockClass } from "@css-blocks/core";
 import * as path from "path";
 import { Position, TextDocument } from "vscode";
 
@@ -27,64 +26,48 @@ export function findImportPath(text: string, key: string, parentPath: string) {
 
 export enum SuggestionType {
   Class,
-  Method,
+  State,
 }
 
 type Suggestion = {
   type: SuggestionType;
   name: string;
-  parent: string;
-  searchText: string;
 };
 
-export function getSuggestions(filePath: string, keyword: string): Array<Suggestion> {
+function getStateSuggestions(klass: BlockClass): Array<Suggestion> {
+  const suggestions: Array<Suggestion> = [];
+  for (let state of klass.attributes()) {
+    suggestions.push({
+      type: SuggestionType.State,
+      name: state.name,
+    });
+  }
+  return suggestions;
+}
+
+export function getSuggestions(filePath: string, keyword: string): Promise<Array<Suggestion>> {
   if (!keyword) {
     keyword = ":scope";
   }
 
-  const content = fs.readFileSync(filePath, { encoding: "utf8" });
-  const lines = content.match(/.*[,{]/g);
-  if (lines === null) {
-    return [];
-  }
-
-  const methodRegex = /[.|:]\w+\[state\|[A-Za-z]\w+/g;
-  const classNameRegex = /\.[_A-Za-z0-9\-]+/g;
-
-  const selector = lines.join(" ");
-  const classNames = selector.match(classNameRegex);
-  const methods = selector.match(methodRegex);
-
-  const suggestions: Array<Suggestion> = [];
-
-  if (classNames !== null) {
-    const uniqueClassNames = _.uniq(classNames).map((item: string) => {
-      const subclassName = item.slice(1);
-      const parent = ":scope";
-      return {
-        type: SuggestionType.Class,
-        name: subclassName,
-        parent: parent,
-        searchText: `${parent}${subclassName}`,
-      };
-    });
-
-    suggestions.push(...uniqueClassNames);
-  }
-
-  if (methods !== null) {
-    const uniqueMethodNames = _.uniq(methods).map((item: string) => {
-      const [parent, methodName] = item.split("[state|");
-      return {
-        type: SuggestionType.Method,
-        name: methodName,
-        parent: parent,
-        searchText: `${parent}[state|${methodName}`,
-      };
-    });
-
-    suggestions.push(...uniqueMethodNames);
-  }
-
-  return suggestions.filter(item => item.searchText.indexOf(keyword) !== -1);
+  let factory = new BlockFactory({});
+  return factory.getBlockFromPath(filePath).then((block) => {
+    let suggestions: Array<Suggestion> = [];
+    if (keyword === ":scope") {
+      for (let klass of block.classes) {
+        if (klass.isRoot) continue;
+        suggestions.push({
+          type: SuggestionType.Class,
+          name: klass.name,
+        });
+      }
+      suggestions = suggestions.concat(getStateSuggestions(block.rootClass));
+    } else {
+      let klass = block.lookup(`.${keyword}`);
+      if (klass && isBlockClass(klass)) {
+        suggestions = suggestions.concat(getStateSuggestions(klass));
+      }
+    }
+    return suggestions;
+  });
 }

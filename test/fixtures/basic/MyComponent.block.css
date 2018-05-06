@@ -1,0 +1,32 @@
+:scope[state|top-one] {
+
+}
+
+:scope[state|exclusive=one] {
+
+}
+
+:scope[state|exclusive=two] {
+
+}
+
+:scope[state|exclusive=three] {
+
+}
+
+.class-one[state|mode=open] {
+
+}
+.class-one[state|mode=closed] {
+
+}
+.class-one[state|mode=compact] {
+
+}
+.class-one[state|mode=elided] {
+
+}
+
+.class-two {
+
+}

@@ -49,16 +49,14 @@ export class CSSBlocksCompletionProvider implements CompletionItemProvider {
       return empty;
     }
 
-    const suggestions = getSuggestions(importPath, field);
-
-    return Promise.resolve(
-      suggestions.map(({ name, type }) => {
-        if (type === SuggestionType.Method) {
+    return getSuggestions(importPath, field).then((suggestions) => {
+      return suggestions.map(({ name, type }) => {
+        if (type === SuggestionType.State) {
           return new CompletionItem(name, CompletionItemKind.Method);
         }
 
         return new CompletionItem(name, CompletionItemKind.Variable);
-      }),
-    );
+      });
+    });
   }
 }

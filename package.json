@@ -25,7 +25,7 @@
     "onLanguage:typescriptreact",
     "onLanguage:javascriptreact"
   ],
-  "main": "./out/extension",
+  "main": "./out/src/extension",
   "contributes": {
     "commands": []
   },
